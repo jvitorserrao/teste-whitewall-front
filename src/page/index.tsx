@@ -1,16 +1,21 @@
 import { Button, Input, message } from "antd";
 import axios from "axios";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 
 const IndexPage = () => {
+  const navigate = useNavigate(); 
     const API_URL = process.env.REACT_APP_API_URL
     const [key, setKey] = useState("");
+   
   
     const handleSubmit = async () => {
+      
       try {
         await axios.post(`${API_URL}/login`, { key });
         message.success("Login realizado com sucesso!");
+        navigate('/listaContato');
       } catch (error) {
         message.error("Key inválida!");
       }
