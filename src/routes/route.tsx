@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import IndexPage from './page/index'
-import ListaContato from './page/listaContato'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import IndexPage from "../page/index";
+import ListaContato from "../page/listaContatos";
 
 const App = () => {
   return (

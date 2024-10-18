@@ -2,14 +2,28 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import IndexPage from './page/index';
+import ListaContatos from './page/listaContatos';
 import reportWebVitals from './reportWebVitals';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <IndexPage/>
+  },
+  {
+    path: "contatos",
+    element: <ListaContatos/>
+  }
+])
+
 root.render(
   <React.StrictMode>
-    <IndexPage />
+   <RouterProvider router={router}/>
   </React.StrictMode>
 );
 
