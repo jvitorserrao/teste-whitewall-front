@@ -43,7 +43,8 @@ const IndexPage = () => {
           Acessar
         </Btn>
         <p className="example-text">
-          Exemplo de uso: Key Y2hhdGJvdHRlc3RlMjM5OldwYkJIRzljSGttZ0s4bTFzNGd2
+          Exemplo de uso: <br />
+          Key dGVzdGU2Mzg2NDU0MDY3Mjc3MDIzODE6TXhGQXVtWTYwOUlOQ2VvOHZVc1M=
         </p>
       </ContentCard>
     </div>

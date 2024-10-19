@@ -1,10 +1,11 @@
-import { message, Table, Card, Modal } from "antd";
+import { message, Table, Modal } from "antd";
 import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDate } from "../utils";
 import { Btn } from "../components/Btn";
 import { ContentCard } from "../components/ContentCard";
+import { CommentOutlined } from "@ant-design/icons";
 import "./styles.css";
 
 interface Contato {
@@ -15,12 +16,18 @@ interface Contato {
   identity: string;
 }
 
+interface Comentario {
+  id: string;
+  storageDate: string;
+  content: string;
+}
+
 const ListaContato = () => {
   const API_URL = process.env.REACT_APP_API_URL;
   const [data, setData] = useState<Contato[]>([]);
+  const [items, setItems] = useState<Comentario[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalData, setModalData] = useState<any[]>([]);
   const storedKey = localStorage.getItem("authKey");
   const navigate = useNavigate();
 
@@ -71,14 +78,23 @@ const ListaContato = () => {
   const fetchModalData = async (identity: string) => {
     setLoading(true);
     try {
-      const response = await axios.post(`${API_URL}/contato/${identity}`, {
-        key: { key: storedKey },
+      const response = await axios.get(`${API_URL}/contato/${identity}`, {
+        params: { key: storedKey },
       });
-      setModalData(response.data.results);
+
       setModalVisible(true);
-      message.success("Conversas carregadas com sucesso!");
+      const comentarios: Comentario[] = response.data;
+      setItems(
+        comentarios.map((comment: Comentario) => ({
+          id: comment.id,
+          content: comment.content,
+          storageDate: comment.storageDate,
+        }))
+      );
+
+      message.success("Comentários carregados com sucesso!");
     } catch (error) {
-      message.error("Erro ao buscar as conversas do contato!");
+      message.warning("Nenhum comentário encontrado para o contato!");
     } finally {
       setLoading(false);
     }
@@ -87,31 +103,6 @@ const ListaContato = () => {
   const handleRowClick = (record: Contato) => {
     fetchModalData(record.identity);
   };
-
-  const columns = [
-    {
-      title: "Nome",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Grupo",
-      dataIndex: "group",
-      key: "group",
-    },
-    {
-      title: "Última Mensagem",
-      dataIndex: "lastMessageDate",
-      key: "lastMessageDate",
-      render: (text: string | undefined) => formatDate(text || ""),
-    },
-    {
-      title: "Última Atualização",
-      dataIndex: "lastUpdateDate",
-      key: "lastUpdateDate",
-      render: (text: string | undefined) => formatDate(text || ""),
-    },
-  ];
 
   return (
     <div className="div-container">
@@ -135,18 +126,53 @@ const ListaContato = () => {
             Voltar
           </Btn>
         </div>
-        
+
         {data.length > 0 ? (
           <Table
             dataSource={data}
-            columns={columns}
             rowKey={(record) => record.identity}
             loading={loading}
             pagination={{ pageSize: 10 }}
-            onRow={(record) => ({
-              onClick: () => handleRowClick(record),
-            })}
             style={{ marginTop: "20px" }}
+            columns={[
+              {
+                title: "Nome",
+                dataIndex: "name",
+                key: "name",
+              },
+              {
+                title: "Grupo",
+                dataIndex: "group",
+                key: "group",
+              },
+              {
+                title: "Última Mensagem",
+                dataIndex: "lastMessageDate",
+                key: "lastMessageDate",
+                render: (text: string | undefined) => formatDate(text || ""),
+              },
+              {
+                title: "Última Atualização",
+                dataIndex: "lastUpdateDate",
+                key: "lastUpdateDate",
+                render: (text: string | undefined) => formatDate(text || ""),
+              },
+              {
+                title: "Ações",
+                key: "actions",
+                render: (_, record) => (
+                  <CommentOutlined
+                    title="Buscar"
+                    onClick={() => handleRowClick(record)}
+                    style={{
+                      cursor: "pointer",
+                      fontSize: "20px",
+                      color: "#1890ff",
+                    }}
+                  />
+                ),
+              },
+            ]}
           />
         ) : (
           !loading && (
@@ -158,28 +184,29 @@ const ListaContato = () => {
       </ContentCard>
 
       <Modal
-        title="Conversas do Contato"
+        title="Comentários do Contato"
         visible={modalVisible}
         onCancel={() => setModalVisible(false)}
-        footer={null}
+        footer={true}
         width={800}
       >
         <Table
-          dataSource={modalData}
+          dataSource={items}
+          loading={loading}
+          pagination={false}
           columns={[
             {
-              title: "Campo",
-              dataIndex: "field",
-              key: "field",
+              title: "Data",
+              dataIndex: "storageDate",
+              key: "storageDate",
+              render: (text: string | undefined) => formatDate(text || ""),
             },
             {
-              title: "Valor",
-              dataIndex: "value",
-              key: "value",
+              title: "Comentário",
+              dataIndex: "content",
+              key: "content",
             },
           ]}
-          rowKey={(record) => record.field}
-          pagination={false}
         />
       </Modal>
     </div>

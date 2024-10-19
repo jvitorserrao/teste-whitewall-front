@@ -9,8 +9,7 @@ interface CardProps {
 
 export function ContentCard({ style, children, className }: CardProps) {
   return (
-    <Card className={`custom-button ${className}`} 
-    style={style}>
+    <Card className={`custom-button ${className}`} style={style}>
       {children}
     </Card>
   );
