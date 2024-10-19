@@ -1,7 +1,11 @@
-import { Button, message, Table, Card, Modal } from "antd";
+import { message, Table, Card, Modal } from "antd";
 import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { formatDate } from "../utils";
+import { Btn } from "../components/Btn";
+import { ContentCard } from "../components/ContentCard";
+import "./styles.css";
 
 interface Contato {
   name: string;
@@ -24,22 +28,6 @@ const ListaContato = () => {
     navigate(-1);
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "";
-
-    const options: Intl.DateTimeFormatOptions = {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    };
-    return date.toLocaleString("pt-BR", options);
-  };
-
   const fetchData = async () => {
     setLoading(true);
 
@@ -50,7 +38,7 @@ const ListaContato = () => {
         return;
       }
 
-      const response = await axios.post(`${API_URL}/contato/listar`, {
+      const response = await axios.post(`${API_URL}/contato`, {
         page: 1,
         size: 10,
         sortColumns: [
@@ -83,7 +71,7 @@ const ListaContato = () => {
   const fetchModalData = async (identity: string) => {
     setLoading(true);
     try {
-      const response = await axios.post(`${API_URL}/historico/${identity}`, {
+      const response = await axios.post(`${API_URL}/contato/${identity}`, {
         key: { key: storedKey },
       });
       setModalData(response.data.results);
@@ -126,57 +114,28 @@ const ListaContato = () => {
   ];
 
   return (
-    <div
-      style={{
-        padding: "40px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        backgroundColor: "#f0f2f5",
-      }}
-    >
-      <Card
-        style={{
-          width: "100%",
-          maxWidth: "800px",
-          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-          padding: "20px",
-          borderRadius: "8px",
-          backgroundColor: "#fff",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+    <div className="div-container">
+      <ContentCard className="card">
         <div style={{ marginBottom: "20px" }}>
-          <Button
+          <Btn
+            className="btn"
             type="primary"
             onClick={fetchData}
             loading={loading}
-            style={{
-              padding: "0 40px",
-              fontSize: "16px",
-              height: "40px",
-              borderRadius: "5px",
-            }}
           >
             Buscar
-          </Button>
-          <Button
+          </Btn>
+          <Btn
+            className="btn"
             onClick={handleBack}
             style={{
-              padding: "0 40px",
-              fontSize: "16px",
-              height: "40px",
-              borderRadius: "5px",
               marginLeft: "10px",
             }}
           >
             Voltar
-          </Button>
+          </Btn>
         </div>
-
+        
         {data.length > 0 ? (
           <Table
             dataSource={data}
@@ -196,7 +155,7 @@ const ListaContato = () => {
             </div>
           )
         )}
-      </Card>
+      </ContentCard>
 
       <Modal
         title="Conversas do Contato"
