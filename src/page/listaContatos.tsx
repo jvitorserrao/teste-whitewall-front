@@ -1,12 +1,13 @@
-import { message, Table, Modal } from "antd";
+import { message, Table, Modal, Input } from "antd";
 import axios from "axios";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDate } from "../utils";
 import { Btn } from "../components/Btn";
 import { ContentCard } from "../components/ContentCard";
-import { CommentOutlined } from "@ant-design/icons";
+import { CommentOutlined, PlusOutlined } from "@ant-design/icons";
 import "./styles.css";
+import TextArea from "antd/es/input/TextArea";
 
 interface Contato {
   name: string;
@@ -25,9 +26,14 @@ interface Comentario {
 const ListaContato = () => {
   const API_URL = process.env.REACT_APP_API_URL;
   const [data, setData] = useState<Contato[]>([]);
+  const [filteredData, setFilteredData] = useState<Contato[]>([]);
   const [items, setItems] = useState<Comentario[]>([]);
   const [loading, setLoading] = useState(false);
+  const [identity, setIdentity] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalAddComentario, setModalAddComentario] = useState(false);
+  const [textComentario, setTextComentario] = useState("");
+  const [filter, setFilter] = useState("");
   const storedKey = localStorage.getItem("authKey");
   const navigate = useNavigate();
 
@@ -67,13 +73,21 @@ const ListaContato = () => {
       });
 
       setData(response.data.results);
-      message.success("Dados carregados com sucesso!");
+      setFilteredData(response.data.results);
     } catch (error) {
       message.error("Erro ao buscar os dados!");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const lowercasedFilter = filter.toLowerCase();
+    const filtered = data.filter((contact) =>
+      contact.name.toLowerCase().includes(lowercasedFilter)
+    );
+    setFilteredData(filtered);
+  }, [filter, data]);
 
   const fetchModalData = async (identity: string) => {
     setLoading(true);
@@ -91,8 +105,6 @@ const ListaContato = () => {
           storageDate: comment.storageDate,
         }))
       );
-
-      message.success("Comentários carregados com sucesso!");
     } catch (error) {
       message.warning("Nenhum comentário encontrado para o contato!");
     } finally {
@@ -100,8 +112,41 @@ const ListaContato = () => {
     }
   };
 
+  const fetchModalAddComentario = async (identity: string) => {
+    if (!textComentario.trim()) {
+      message.warning("O comentário não pode ser vazio!");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await axios.post(
+        `${API_URL}/contato/adicionar-comentario/${identity}`,
+        {
+          texto: textComentario,
+        },
+        {
+          params: { key: storedKey },
+        }
+      );
+
+      message.success("Comentário adicionado com sucesso!");
+      setModalAddComentario(false);
+    } catch (error) {
+      message.error("Erro ao adicionar comentário!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRowClick = (record: Contato) => {
     fetchModalData(record.identity);
+  };
+
+  const handleModalComentario = (record: Contato) => {
+    setModalAddComentario(true);
+    setTextComentario("");
+    setIdentity(record.identity);
   };
 
   return (
@@ -127,9 +172,18 @@ const ListaContato = () => {
           </Btn>
         </div>
 
-        {data.length > 0 ? (
+        {!loading && data.length > 0 && (
+          <Input
+            placeholder="Filtrar por nome"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            style={{ marginBottom: "20px" }}
+          />
+        )}
+
+        {filteredData.length > 0 ? (
           <Table
-            dataSource={data}
+            dataSource={filteredData}
             rowKey={(record) => record.identity}
             loading={loading}
             pagination={{ pageSize: 10 }}
@@ -161,15 +215,27 @@ const ListaContato = () => {
                 title: "Ações",
                 key: "actions",
                 render: (_, record) => (
-                  <CommentOutlined
-                    title="Buscar"
-                    onClick={() => handleRowClick(record)}
-                    style={{
-                      cursor: "pointer",
-                      fontSize: "20px",
-                      color: "#1890ff",
-                    }}
-                  />
+                  <div>
+                    <PlusOutlined
+                      title="Adicionar Comentário"
+                      onClick={() => handleModalComentario(record)}
+                      style={{
+                        cursor: "pointer",
+                        fontSize: "20px",
+                        color: "#52c41a",
+                        marginRight: "10px",
+                      }}
+                    />
+                    <CommentOutlined
+                      title="Visualizar Comentários"
+                      onClick={() => handleRowClick(record)}
+                      style={{
+                        cursor: "pointer",
+                        fontSize: "20px",
+                        color: "#1890ff",
+                      }}
+                    />
+                  </div>
                 ),
               },
             ]}
@@ -187,7 +253,7 @@ const ListaContato = () => {
         title="Comentários do Contato"
         visible={modalVisible}
         onCancel={() => setModalVisible(false)}
-        footer={true}
+        footer={null}
         width={800}
       >
         <Table
@@ -208,6 +274,39 @@ const ListaContato = () => {
             },
           ]}
         />
+      </Modal>
+      <Modal
+        title="Adicionar Comentário ao Contato"
+        visible={modalAddComentario}
+        onCancel={() => setModalAddComentario(false)}
+        footer={null}
+        width={600}
+      >
+        <TextArea
+          placeholder="Adicione um comentário"
+          value={textComentario}
+          onChange={(e) => setTextComentario(e.target.value)}
+          rows={4}
+        />
+        <div style={{ marginTop: "20px" }}>
+          <Btn
+            className="btn"
+            type="primary"
+            onClick={() => fetchModalAddComentario(identity)}
+            loading={loading}
+          >
+            Adicionar
+          </Btn>
+          <Btn
+            className="btn"
+            onClick={() => setModalAddComentario(false)}
+            style={{
+              marginLeft: "8px",
+            }}
+          >
+            Cancelar
+          </Btn>
+        </div>
       </Modal>
     </div>
   );
