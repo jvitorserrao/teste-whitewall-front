@@ -22,7 +22,7 @@ const IndexPage = () => {
       await axios.post(`${API_URL}/login`, { key }, { withCredentials: true });
 
       localStorage.setItem("authKey", key);
-      message.success("Auntenticação realizada com sucesso!");
+      message.success("Autenticação realizada com sucesso!");
       navigate("/contatos");
     } catch (error) {
       message.error("Usuário não autorizado!");
